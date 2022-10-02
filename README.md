@@ -1,9 +1,10 @@
 # Single-header C++ VMT hooking (vfptr swap)
 
-* Supports RAII
-* Unit tested with Catch2
-* Tested on x86/x64, MSVC and Clang/LLVM
-* VMT size calculation
+* Supports RAII.
+* Unit tested with Catch2.
+* Tested on x86/x64, MSVC and Clang/LLVM.
+* VMT size calculation.
+* Copies the RTTI object locator to ensure `dynamic_cast` won't break'.
 
 Usage: (demonstrated on MapleStory 8.83.0.1)
 

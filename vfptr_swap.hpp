@@ -56,7 +56,7 @@ class vfptr_swap_t
 private:
 	T* obj;
 	uintptr_t* orig_vfptr;
-	uintptr_t* vmt;
+	std::unique_ptr<uintptr_t[]> vmt;
 	std::size_t vmt_size;
 
 public:
@@ -73,7 +73,7 @@ public:
 		}
 
 		// accounting for RTTI
-		this->vmt = new uintptr_t[this->vmt_size + 1];
+		this->vmt = std::make_unique<uintptr_t[]>(this->vmt_size + 1);
 		std::copy(this->orig_vfptr - 1, this->orig_vfptr + this->vmt_size, &this->vmt[0]);
 		*reinterpret_cast<uintptr_t*>(this->obj) = reinterpret_cast<uintptr_t>(&this->vmt[1]);
 	}
@@ -82,7 +82,7 @@ public:
 	~vfptr_swap_t()
 	{
 		*reinterpret_cast<uintptr_t*>(this->obj) = reinterpret_cast<uintptr_t>(this->orig_vfptr);
-		delete[] this->vmt;
+		this->vmt = nullptr;
 	}
 
 	auto size() const -> std::size_t
