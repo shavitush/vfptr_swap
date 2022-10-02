@@ -72,9 +72,10 @@ public:
 			this->vmt_size = vmt::calc_length(this->orig_vfptr);
 		}
 
-		this->vmt = new uintptr_t[this->vmt_size];
-		std::copy(this->orig_vfptr, this->orig_vfptr + this->vmt_size, &this->vmt[0]);
-		*reinterpret_cast<uintptr_t*>(this->obj) = reinterpret_cast<uintptr_t>(this->vmt);
+		// accounting for RTTI
+		this->vmt = new uintptr_t[this->vmt_size + 1];
+		std::copy(this->orig_vfptr - 1, this->orig_vfptr + this->vmt_size, &this->vmt[0]);
+		*reinterpret_cast<uintptr_t*>(this->obj) = reinterpret_cast<uintptr_t>(&this->vmt[1]);
 	}
 
 	// Restores original vfptr
@@ -91,7 +92,13 @@ public:
 
 	auto get_vmt() const -> uintptr_t*
 	{
-		return this->vmt;
+		return &this->vmt[1];
+	}
+
+	// irrelevant for objects without rtti
+	auto get_rtti() const -> uintptr_t*
+	{
+		return &this->get_vmt()[-1];
 	}
 
 	auto operator[](std::size_t idx) const -> uintptr_t&
