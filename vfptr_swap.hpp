@@ -104,9 +104,9 @@ public:
 		return obj;
 	}
 
-	template <typename T>
-	auto original(std::size_t idx) const -> T
+	template <typename Y>
+	auto original(std::size_t idx) const -> Y
 	{
-		return reinterpret_cast<T>(this->orig_vfptr[idx]);
+		return reinterpret_cast<Y>(this->orig_vfptr[idx]);
 	}
 };
