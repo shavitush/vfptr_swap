@@ -32,8 +32,8 @@ namespace vmt
 				(mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) > 0 && // executable
 				(mbi.Protect & (PAGE_NOACCESS | PAGE_GUARD)) == 0; // no page protections block our access to read/execute
 #else
-			// not 100% accurate. POSIX means i have to manually parse /proc/self/maps and i'm not botheri
-			// it does not need to be 100% accurate though. we just need to copy *enough* virtual functions! more won't hurt
+			// Not 100% accurate. In POSIX, I have to manually parse /proc/self/maps and I'm not bothering.
+			// It does not need to be 100% accurate though. We just need to copy *enough* virtual functions! More won't hurt.
 			return ptr != 0 && *reinterpret_cast<uintptr_t**>(ptr) != nullptr;
 #endif
 		};
@@ -72,45 +72,51 @@ public:
 			this->vmt_size = vmt::calc_length(this->orig_vfptr);
 		}
 
-		// accounting for RTTI
+		// Accounting for RTTI.
 		this->vmt = std::make_unique<uintptr_t[]>(this->vmt_size + 1);
 		std::copy(this->orig_vfptr - 1, this->orig_vfptr + this->vmt_size, &this->vmt[0]);
 		*reinterpret_cast<uintptr_t*>(this->obj) = reinterpret_cast<uintptr_t>(&this->vmt[1]);
 	}
 
-	// Restores original vfptr
+	// Restores original vfptr.
 	~vfptr_swap_t()
 	{
 		*reinterpret_cast<uintptr_t*>(this->obj) = reinterpret_cast<uintptr_t>(this->orig_vfptr);
 		this->vmt = nullptr;
 	}
 
+	// Returns the amount of virtual functions in the VMT.
 	auto size() const -> std::size_t
 	{
 		return this->vmt_size;
 	}
 
+	// Returns a pointer to the beginning of the copied VMT.
 	auto get_vmt() const -> uintptr_t*
 	{
 		return &this->vmt[1];
 	}
 
-	// irrelevant for objects without rtti
+	// Retrieves the RTTI object locator, if exists. Otherwise, returned data might be garbage.
 	auto get_rtti() const -> uintptr_t*
 	{
 		return &this->get_vmt()[-1];
 	}
 
+	// Returns a virtual function by its index, from the copied VMT.
+	// The returned virtual function will be hooked if it was replaced by the hooker, otherwise the original virtual function will be returned.
 	auto operator[](std::size_t idx) const -> uintptr_t&
 	{
 		return this->get_vmt()[idx];
 	}
 
+	// Returns the object that is hooked.
 	auto operator*() -> T*
 	{
 		return obj;
 	}
 
+	// Retrieves a specified function pointer from the original VMT.
 	template <typename Y>
 	auto original(std::size_t idx) const -> Y
 	{
