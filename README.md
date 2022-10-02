@@ -4,7 +4,6 @@
 * Unit tested with Catch2
 * Tested on x86/x64, MSVC and Clang/LLVM
 * VMT size calculation
-* Windows-only
 
 Usage: (demonstrated on MapleStory 8.83.0.1)
 

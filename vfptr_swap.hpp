@@ -4,8 +4,10 @@
 #include <cstddef>
 #include <memory>
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#endif
 
 namespace vmt
 {
@@ -22,12 +24,18 @@ namespace vmt
 	{
 		auto is_valid_page = [](uintptr_t ptr) -> bool
 		{
+#ifdef _WIN32
 			MEMORY_BASIC_INFORMATION mbi{};
 			::VirtualQuery(reinterpret_cast<void*>(ptr), &mbi, sizeof(mbi));
 
 			return
 				(mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) > 0 && // executable
 				(mbi.Protect & (PAGE_NOACCESS | PAGE_GUARD)) == 0; // no page protections block our access to read/execute
+#else
+			// not 100% accurate. POSIX means i have to manually parse /proc/self/maps and i'm not botheri
+			// it does not need to be 100% accurate though. we just need to copy *enough* virtual functions! more won't hurt
+			return ptr != 0 && *reinterpret_cast<uintptr_t**>(ptr) != nullptr;
+#endif
 		};
 
 		std::size_t len = 0;
