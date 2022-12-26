@@ -6,36 +6,36 @@
 * VMT size calculation.
 * Copies the RTTI object locator to ensure `dynamic_cast` won't break.
 
-Usage: (demonstrated on MapleStory 8.83.0.1)
+Usage:
 
 ```cpp
-// Assumption: CUser looks like this
+// Assumption: c_example looks like this
 // 
-// class CUser
+// class c_example
 // {
 // public:
-//     virtual ~CUser() = 0;
-//     virtual void Update() = 0;
+//     virtual ~c_example() = 0;
+//     virtual void print() = 0;
 // };
 
-uintptr_t local_player = *reinterpret_cast<uintptr_t*>(0x00BEBF98);
-vfptr_swap_t swapper(local_player);
+uintptr_t example_object = *reinterpret_cast<uintptr_t*>(0x0CA7F00D);
+vfptr_swap_t swapper(example_object);
 
-class hooked_user
+class c_hooked_example
 {
 public:
-	void update()
+	void print(const char* text)
 	{
-		printf("cuser::update intercepted\n");
+		printf("c_example::print intercepted. og text: %s\n", text);
 		Sleep(500);
 
-		// *swapper returns the original object, although we could substitute it with local_player in this case
-		swapper.original<void(__thiscall*)(uintptr_t ecx)>(1)(*swapper);
+		// *swapper returns the original object, although we could substitute it with example_object in this case
+		swapper.original<void(__thiscall*)(uintptr_t, const char*)>(1)(*swapper, text);
 	}	
 };
 
 void init()
 {
-	swapper[1] = vmt::cfunc(&hooked_user::update);
+	swapper[1] = vmt::cfunc(&c_hooked_example::print);
 }
 ```
